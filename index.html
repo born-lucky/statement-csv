@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bank Statement to CSV Converter – Private, In‑Browser, Free First Page</title>
+<meta name="description" content="Convert bank statement PDFs to CSV or Excel in your browser. Nothing is uploaded. First page free, $9 once for unlimited pages and statements.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%231b5e4b'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'>CSV</text></svg>">
+<style>
+:root{--bg:#f7f7f4;--card:#fff;--ink:#1a1a1a;--muted:#5c5f58;--line:#e3e4df;--brand:#1b5e4b;--brand-ink:#fff;--accent:#e9f3ef;--bad:#b3261e;--good:#1b5e4b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121412;--card:#1b1e1b;--ink:#ececea;--muted:#a2a69f;--line:#2b2f2b;--brand:#4fb08f;--brand-ink:#0d1a15;--accent:#1d2a25;--bad:#ff7b72;--good:#4fb08f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:32px 16px 64px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.logo{width:36px;height:36px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+h1{font-size:28px;line-height:1.2;margin:0 0 8px}.lede{color:var(--muted);margin:0 0 24px;font-size:17px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+#drop{border:2px dashed var(--line);border-radius:14px;padding:44px 20px;text-align:center;cursor:pointer;transition:.15s;background:var(--card)}
+#drop:hover,#drop.over{border-color:var(--brand);background:var(--accent)}
+#drop strong{display:block;font-size:18px;margin-bottom:4px}#drop span{color:var(--muted)}
+#file{display:none}
+.trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;color:var(--muted);font-size:14px}
+.trust li::before{content:"✓ ";color:var(--good);font-weight:700}
+#status{margin-top:12px;color:var(--muted);min-height:1.5em}
+#results{margin-top:24px}
+#summary{margin:0 0 12px;font-weight:600}
+#tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);font-weight:600}td:nth-child(2){white-space:normal;min-width:220px}
+.num{text-align:right;font-variant-numeric:tabular-nums}.neg{color:var(--bad)}.pos{color:var(--good)}
+#actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:14px}
+.btn{display:inline-block;background:var(--brand);color:var(--brand-ink);border:0;border-radius:9px;padding:11px 18px;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+label.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px}
+#paywall{margin-top:18px;background:var(--accent);border:1px solid var(--line);border-radius:12px;padding:18px}
+#paywall p{margin:0 0 12px}
+#keyform{display:flex;gap:8px;margin-top:12px}#key{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:15px}
+.small{font-size:14px;color:var(--muted)}
+section.info{margin-top:40px}section.info h2{font-size:20px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.faq details{border-bottom:1px solid var(--line);padding:10px 0}.faq summary{cursor:pointer;font-weight:600}
+footer{margin-top:48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;opacity:0;transition:.2s;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}.toast.bad{background:var(--bad);color:#fff}
+.price{font-size:34px;font-weight:800}.price small{font-size:15px;font-weight:500;color:var(--muted)}
+body.unlocked .pro-only{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">CSV</div><div><strong>StatementCSV</strong><div class="small">Bank statement PDF → CSV, entirely in your browser</div></div></header>
+
+<h1>Turn a bank statement PDF into a clean CSV in seconds</h1>
+<p class="lede">Drop the PDF your bank gave you. Get a spreadsheet with Date, Description, Amount and Balance. The file is processed on your computer and never uploaded anywhere.</p>
+
+<div id="drop"><strong>Drop a statement PDF here</strong><span>or click to choose a file</span></div>
+<input id="file" type="file" accept="application/pdf,.pdf">
+<ul class="trust"><li>Nothing leaves your device</li><li>No account, no email required</li><li>First page free, every time</li><li>Works with most bank and credit‑card PDFs that have selectable text</li></ul>
+<div id="status"></div>
+
+<div id="results" hidden>
+  <p id="summary"></p>
+  <div id="tablewrap"></div>
+  <div id="actions" hidden>
+    <button id="dl" class="btn">Download CSV</button>
+    <label class="chk"><input type="checkbox" id="split"> Separate Debit / Credit columns</label>
+  </div>
+  <div id="paywall" hidden>
+    <p id="paywall-text"></p>
+    <a id="buy" class="btn" href="#" rel="noopener">Unlock all pages – $9 once</a>
+    <a href="#" id="havekey" class="small" style="margin-left:12px">Already paid? Enter your key</a>
+    <form id="keyform" hidden><input id="key" placeholder="Paste unlock key" autocomplete="off"><button class="btn">Unlock</button></form>
+  </div>
+</div>
+
+<section class="info">
+  <div class="grid">
+    <div class="card"><h2>How it works</h2><ol class="small" style="padding-left:18px;margin:0"><li>Download a PDF statement from your bank's website.</li><li>Drop it on this page. Text is read locally with an open‑source PDF engine.</li><li>Dates, descriptions, amounts and running balances are detected and checked against each other.</li><li>Download the CSV and open it in Excel, Google Sheets, QuickBooks or Xero.</li></ol></div>
+    <div class="card pro-only"><h2>Pricing</h2><div class="price">$9 <small>one‑time, not a subscription</small></div><p class="small">Unlimited pages and statements on this browser, forever. Comparable tools charge $15–30 every month. If it fails on your statement, reply to your receipt within 7 days for a full refund.</p><a id="buy2" class="btn" href="#" rel="noopener">Unlock for $9</a></div>
+  </div>
+  <div class="card faq" style="margin-top:14px">
+    <h2>Questions</h2>
+    <details><summary>Is my statement uploaded?</summary><p class="small">No. The page has no server. You can open your browser's network inspector while converting: no request carries your file. It also works offline once loaded.</p></details>
+    <details><summary>Which banks are supported?</summary><p class="small">Any statement with selectable text and a date at the start of each transaction line: checking, savings and credit‑card statements in US (MM/DD) and European (DD/MM, DD Mon) date formats, with single Amount columns or separate Debit / Credit columns. Scanned or photographed statements are not supported.</p></details>
+    <details><summary>How accurate is it?</summary><p class="small">When a running balance column exists, every amount is cross‑checked against it and signs are corrected automatically. Always spot‑check totals before filing anything. The free first page lets you verify quality on your own bank before paying.</p></details>
+    <details><summary>What does the $9 unlock?</summary><p class="small">Every page of every statement you convert on this browser. The key is tied to this browser, so keep it from the confirmation page if you want to use it on another device.</p></details>
+    <details><summary>Refunds?</summary><p class="small">If your statement doesn't convert properly, reply to the Stripe receipt within 7 days and you'll get a full refund.</p></details>
+  </div>
+</section>
+
+<footer>StatementCSV · Processing happens in your browser · Payments by Stripe · Contact: <span id="contact">see receipt</span></footer>
+</div>
+<div id="toast" class="toast"></div>
+<script src="./config.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
